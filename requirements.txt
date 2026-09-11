@@ -1,3 +1,15 @@
 streamlit
 flask
 gunicorn
+flask
+flask-cors
+mysql-connector-python
+python-dotenv
+bcrypt
+tensorflow
+pillow
+opencv-python
+numpy
+pandas
+gunicorn
+reportlab
