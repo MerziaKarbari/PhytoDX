@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+*.h5
+*.zip
+*.json
+ai_model/data/
+ai_model/model/
