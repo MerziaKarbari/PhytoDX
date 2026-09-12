@@ -8,7 +8,6 @@ import os
 import sys
 
 # ---------- API URL ----------
-# Deployed backend URL (Render)
 API_URL = "https://phytodx.onrender.com"
 
 # ---------- SESSION STATE ----------
@@ -428,7 +427,6 @@ elif st.session_state.page == "Scan":
         if st.button("🔍 Analyze", use_container_width=True):
             with st.spinner("🧠 AI is analyzing the image..."):
                 try:
-                    # ----- SEND IMAGE TO BACKEND FOR PREDICTION -----
                     if uploaded_file is not None:
                         files = {"image": uploaded_file.getvalue()}
                         predict_response = requests.post(
@@ -450,7 +448,6 @@ elif st.session_state.page == "Scan":
                         predicted_class = None
                         confidence = 0
                     
-                    # ----- GET DISEASE INFO FROM BACKEND -----
                     if predicted_class:
                         disease_info = None
                         try:
@@ -464,7 +461,6 @@ elif st.session_state.page == "Scan":
                         except:
                             pass
                         
-                        # ----- DISPLAY RESULT -----
                         if disease_info:
                             disease = disease_info.get('disease', {})
                             treatment = disease_info.get('treatment', {})
@@ -488,7 +484,6 @@ elif st.session_state.page == "Scan":
                             """, unsafe_allow_html=True)
                             st.info("ℹ️ Detailed disease information coming soon!")
                         
-                        # ----- SAVE TO HISTORY -----
                         if st.session_state.logged_in:
                             try:
                                 save_response = requests.post(
@@ -587,10 +582,12 @@ elif st.session_state.page == "Login":
     with st.container():
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            email = st.text_input("Email", placeholder="your@email.com")
-            password = st.text_input("Password", type="password", placeholder="Enter password")
+            with st.form("login_form"):
+                email = st.text_input("Email", placeholder="your@email.com")
+                password = st.text_input("Password", type="password", placeholder="Enter password")
+                submit = st.form_submit_button("Login", use_container_width=True)
             
-            if st.button("Login", use_container_width=True):
+            if submit:
                 if email and password:
                     try:
                         response = requests.post(
@@ -629,13 +626,15 @@ elif st.session_state.page == "Register":
     with st.container():
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            name = st.text_input("Full Name", placeholder="Your name")
-            email = st.text_input("Email", placeholder="your@email.com")
-            phone = st.text_input("Phone (optional)", placeholder="Phone number")
-            password = st.text_input("Password", type="password", placeholder="Create password")
-            confirm = st.text_input("Confirm Password", type="password", placeholder="Confirm password")
+            with st.form("register_form"):
+                name = st.text_input("Full Name", placeholder="Your name")
+                email = st.text_input("Email", placeholder="your@email.com")
+                phone = st.text_input("Phone (optional)", placeholder="Phone number")
+                password = st.text_input("Password", type="password", placeholder="Create password")
+                confirm = st.text_input("Confirm Password", type="password", placeholder="Confirm password")
+                submit = st.form_submit_button("Register", use_container_width=True)
             
-            if st.button("Register", use_container_width=True):
+            if submit:
                 if name and email and password and confirm:
                     if password != confirm:
                         st.warning("⚠️ Passwords do not match")
