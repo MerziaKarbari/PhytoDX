@@ -4,7 +4,7 @@ flask-cors
 mysql-connector-python
 python-dotenv
 bcrypt
-tensorflow
+tensorflow==2.15.1
 pillow
 opencv-python
 numpy
