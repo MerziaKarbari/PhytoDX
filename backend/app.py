@@ -4,6 +4,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from db import Database
+import random
 
 # Create Flask app
 app = Flask(__name__)
@@ -120,6 +121,55 @@ def get_disease_by_name(disease_name):
             "message": f"Error: {str(e)}"
         }), 500
 
+# ---------- PREDICT ROUTE (Demo for Streamlit Cloud) ----------
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    """Predict disease from uploaded image (demo)"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({
+                "success": False,
+                "message": "No image provided"
+            }), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({
+                "success": False,
+                "message": "No image selected"
+            }), 400
+        
+        # ----- DEMO PREDICTION -----
+        # Jab tak AI model backend mein integrate nahi hota,
+        # hum ek demo prediction return karenge
+        demo_diseases = [
+            "Tomato Early blight leaf",
+            "Tomato Septoria leaf spot",
+            "Potato leaf early blight",
+            "Potato leaf late blight",
+            "Apple Scab Leaf",
+            "Corn leaf blight",
+            "grape leaf black rot",
+            "Tomato leaf bacterial spot",
+            "Corn rust leaf",
+            "Squash Powdery mildew leaf"
+        ]
+        
+        predicted_disease = random.choice(demo_diseases)
+        confidence = round(random.uniform(65, 95), 2)
+        
+        return jsonify({
+            "success": True,
+            "disease": predicted_disease,
+            "confidence": confidence
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Error: {str(e)}"
+        }), 500
+
 # ---------- SAVE SCAN HISTORY ROUTE ----------
 @app.route('/api/save_scan', methods=['POST'])
 def save_scan():
@@ -142,10 +192,8 @@ def save_scan():
         # Get disease ID from disease name
         disease = db.get_disease_by_name(disease_name)
         if not disease:
-            # If disease not found, create a new entry
             query = "INSERT INTO DISEASES (disease_name) VALUES (%s)"
             db.execute_query(query, (disease_name,))
-            # Get the new disease ID
             disease = db.get_disease_by_name(disease_name)
             disease_id = disease['disease_id'] if disease else None
         else:
@@ -158,7 +206,6 @@ def save_scan():
                 "message": "Could not find or create disease"
             }), 500
         
-        # Save scan
         result = db.save_scan(user_id, disease_id, image_path, confidence)
         db.disconnect()
         

@@ -1,5 +1,5 @@
 # frontend/app.py
-# PhytoDx - Plant Disease Detection with AI
+# PhytoDx - Plant Disease Detection with AI (Cloud Version)
 
 import streamlit as st
 from PIL import Image
@@ -7,12 +7,9 @@ import requests
 import os
 import sys
 
-# Add ai_model to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'ai_model'))
-from predict import PlantDiseasePredictor
-
 # ---------- API URL ----------
-API_URL = "http://localhost:5000"
+# Deployed backend URL (Render)
+API_URL = "https://phytodx.onrender.com"
 
 # ---------- SESSION STATE ----------
 if 'page' not in st.session_state:
@@ -28,26 +25,6 @@ st.set_page_config(
     page_icon="🌿",
     layout="wide"
 )
-
-# ---------- LOAD AI MODEL ----------
-@st.cache_resource
-def load_model():
-    """Load the trained AI model"""
-    try:
-        predictor = PlantDiseasePredictor()
-        return predictor
-    except Exception as e:
-        st.error(f"❌ Failed to load AI model: {e}")
-        return None
-
-# Load model
-predictor = load_model()
-
-# Show model status in sidebar
-if predictor is not None and predictor.model is not None:
-    st.sidebar.success("✅ AI Model Loaded!")
-else:
-    st.sidebar.error("❌ AI Model Failed to Load!")
 
 # ---------- CUSTOM CSS ----------
 st.markdown("""
@@ -421,7 +398,6 @@ elif st.session_state.page == "Scan":
     </div>
     """, unsafe_allow_html=True)
     
-    # ---------- TWO OPTIONS: UPLOAD OR CAPTURE ----------
     option = st.radio(
         "Choose input method:",
         ["📁 Upload Image", "📸 Capture from Camera"],
@@ -429,6 +405,7 @@ elif st.session_state.page == "Scan":
     )
     
     image = None
+    uploaded_file = None
     
     if option == "📁 Upload Image":
         uploaded_file = st.file_uploader(
@@ -441,6 +418,7 @@ elif st.session_state.page == "Scan":
     else:  # Capture from Camera
         camera_image = st.camera_input("📸 Capture a leaf image")
         if camera_image is not None:
+            uploaded_file = camera_image
             image = Image.open(camera_image)
     
     # ---------- PROCESS IMAGE ----------
@@ -448,16 +426,37 @@ elif st.session_state.page == "Scan":
         st.image(image, caption="Uploaded Leaf", width=400)
         
         if st.button("🔍 Analyze", use_container_width=True):
-            if predictor is not None and predictor.model is not None:
-                with st.spinner("🧠 AI is analyzing the image..."):
-                    try:
-                        predicted_class, confidence = predictor.predict(image)
+            with st.spinner("🧠 AI is analyzing the image..."):
+                try:
+                    # ----- SEND IMAGE TO BACKEND FOR PREDICTION -----
+                    if uploaded_file is not None:
+                        files = {"image": uploaded_file.getvalue()}
+                        predict_response = requests.post(
+                            f"{API_URL}/api/predict",
+                            files=files,
+                            timeout=60
+                        )
+                        predict_result = predict_response.json()
                         
-                        # ----- GET DISEASE INFO FROM BACKEND -----
+                        if predict_result.get("success"):
+                            predicted_class = predict_result.get("disease")
+                            confidence = predict_result.get("confidence", 0)
+                        else:
+                            st.error(f"❌ Prediction failed: {predict_result.get('message', 'Unknown error')}")
+                            predicted_class = None
+                            confidence = 0
+                    else:
+                        st.error("❌ No image provided")
+                        predicted_class = None
+                        confidence = 0
+                    
+                    # ----- GET DISEASE INFO FROM BACKEND -----
+                    if predicted_class:
                         disease_info = None
                         try:
                             response = requests.get(
-                                f"{API_URL}/api/disease/{predicted_class}"
+                                f"{API_URL}/api/disease/{predicted_class}",
+                                timeout=30
                             )
                             result = response.json()
                             if result.get('success'):
@@ -465,7 +464,7 @@ elif st.session_state.page == "Scan":
                         except:
                             pass
                         
-                        # ----- DISPLAY RESULT WITH DISEASE INFO -----
+                        # ----- DISPLAY RESULT -----
                         if disease_info:
                             disease = disease_info.get('disease', {})
                             treatment = disease_info.get('treatment', {})
@@ -498,8 +497,9 @@ elif st.session_state.page == "Scan":
                                         "user_id": st.session_state.user['user_id'],
                                         "disease_name": predicted_class,
                                         "confidence": confidence,
-                                        "image_path": "captured_image"
-                                    }
+                                        "image_path": "uploaded_image"
+                                    },
+                                    timeout=30
                                 )
                                 if save_response.status_code == 200:
                                     st.success("✅ Scan saved to history!")
@@ -511,10 +511,8 @@ elif st.session_state.page == "Scan":
                         if confidence < 60:
                             st.warning("⚠️ Low confidence prediction. Please upload a clearer image.")
                         
-                    except Exception as e:
-                        st.error(f"❌ Error during prediction: {e}")
-            else:
-                st.error("❌ AI model not loaded. Please check if model file exists.")
+                except Exception as e:
+                    st.error(f"❌ Error during prediction: {e}")
 
 # ==================== HISTORY PAGE ====================
 elif st.session_state.page == "History":
@@ -530,7 +528,8 @@ elif st.session_state.page == "History":
     else:
         try:
             response = requests.get(
-                f"{API_URL}/api/get_scans/{st.session_state.user['user_id']}"
+                f"{API_URL}/api/get_scans/{st.session_state.user['user_id']}",
+                timeout=30
             )
             result = response.json()
             
@@ -596,7 +595,8 @@ elif st.session_state.page == "Login":
                     try:
                         response = requests.post(
                             f"{API_URL}/api/login",
-                            json={"email": email, "password": password}
+                            json={"email": email, "password": password},
+                            timeout=30
                         )
                         result = response.json()
                         if result.get("success"):
@@ -643,7 +643,8 @@ elif st.session_state.page == "Register":
                         try:
                             response = requests.post(
                                 f"{API_URL}/api/register",
-                                json={"name": name, "email": email, "password": password, "phone": phone}
+                                json={"name": name, "email": email, "password": password, "phone": phone},
+                                timeout=30
                             )
                             result = response.json()
                             if result.get("success"):
