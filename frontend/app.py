@@ -462,8 +462,13 @@ elif st.session_state.page == "Scan":
                             pass
                         
                         if disease_info:
-                            disease = disease_info.get('disease', {})
-                            treatment = disease_info.get('treatment', {})
+    # Backend se disease info directly aa sakti hai
+    if isinstance(disease_info, dict):
+        disease = disease_info
+        treatment = disease_info
+    else:
+        disease = {}
+        treatment = {}
                             
                             st.markdown(f"""
                             <div class="result-box">
