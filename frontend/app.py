@@ -681,34 +681,7 @@ elif st.session_state.page == "About":
     </div>
     """, unsafe_allow_html=True)
 
-# ==================== LOGIN PAGE ====================
-elif st.session_state.page == "Login":
-    st.markdown("""
-    <div class="page-card" style="max-width: 500px; margin: 0 auto;">
-        <h2>🔐 Login</h2>
-        <p>Welcome back! Login to your account.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    with st.container():
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            with st.form("login_form"):
-                email = st.text_input("Email", placeholder="your@email.com")
-                password = st.text_input("Password", type="password", placeholder="Enter password")
-                submit = st.form_submit_button("Login", use_container_width=True)
-            
-            if submit:
-                if email and password:
-                    try:
-                        response = requests.post(
-                            f"{API_URL}/api/login",
-                            json={"email": email, "password": password},
-                            timeout=30
-                        )
-                        result = response.json()
-                        if result.get("success"):
-    # Automatically log in the newly registered user
+if result.get("success"):
     st.session_state.logged_in = True
     st.session_state.user = {
         "user_id": result.get("user_id"),
@@ -720,19 +693,9 @@ elif st.session_state.page == "Login":
     st.success("✅ Registration successful! You are now logged in.")
     st.session_state.page = "Home"
     st.rerun()
-                        else:
-                            st.error(f"❌ {result.get('message', 'Login failed')}")
-                    except Exception as e:
-                        st.error(f"❌ Error: {str(e)}")
-                else:
-                    st.warning("⚠️ Please fill all fields")
-            
-            st.markdown("""
-            <p style="text-align:center; color:#1a3a1a; margin-top:1rem; font-size:1.1rem;">
-                Don't have an account? <a href="#" style="color:#2d4a2d; font-weight:600;">Register</a>
-            </p>
-            """, unsafe_allow_html=True)
 
+else:
+    st.error(f"❌ {result.get('message', 'Registration failed')}")
 # ==================== REGISTER PAGE ====================
 elif st.session_state.page == "Register":
     st.markdown("""
