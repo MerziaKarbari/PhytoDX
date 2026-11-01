@@ -177,10 +177,10 @@ class Database:
             cursor.execute(
                 """
                 INSERT INTO SCAN_HISTORY
-                (user_id, disease_id, image_path, confidence)
+                (user_id, disease_id, image_path, confidence_score)
                 VALUES (%s, %s, %s, %s)
                 """,
-                (user_id, disease_id, image_path, confidence)
+                (user_id, disease_id, image_path, confidence_score)
             )
             self.connection.commit()
 
