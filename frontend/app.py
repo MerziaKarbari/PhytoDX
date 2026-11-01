@@ -697,7 +697,8 @@ if result.get("success"):
 else:
     st.error(f"❌ {result.get('message', 'Registration failed')}")
     # ==================== REGISTER PAGE ====================
-if st.session_state.page == "Register":
+# ==================== REGISTER PAGE ====================
+elif st.session_state.page == "Register":
     st.markdown("""
     <div class="page-card" style="max-width: 500px; margin: 0 auto;">
         <h2>📝 Register</h2>
@@ -709,14 +710,8 @@ if st.session_state.page == "Register":
 
     with col2:
         with st.form("register_form"):
-            name = st.text_input(
-                "Full Name",
-                placeholder="Your name"
-            )
-            email = st.text_input(
-                "Email",
-                placeholder="your@email.com"
-            )
+            name = st.text_input("Full Name", placeholder="Your name")
+            email = st.text_input("Email", placeholder="your@email.com")
             phone = st.text_input(
                 "Phone (optional)",
                 placeholder="Phone number"
@@ -739,8 +734,10 @@ if st.session_state.page == "Register":
 
         if submit:
             if name and email and password and confirm:
+
                 if password != confirm:
                     st.warning("⚠️ Passwords do not match")
+
                 else:
                     try:
                         response = requests.post(
