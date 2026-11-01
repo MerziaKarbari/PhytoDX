@@ -580,6 +580,7 @@ else:
 
 # ==================== HISTORY PAGE ====================
 # ==================== HISTORY PAGE ====================
+# ==================== HISTORY PAGE ====================
 elif st.session_state.page == "History":
     st.markdown("""
     <div class="page-card">
@@ -593,24 +594,38 @@ elif st.session_state.page == "History":
 
     else:
         try:
+            user_id = st.session_state.user.get("user_id")
+
             response = requests.get(
-                f"{API_URL}/api/get_scans/{st.session_state.user['user_id']}",
+                f"{API_URL}/api/get_scans/{user_id}",
                 timeout=30
             )
 
             result = response.json()
 
-            if response.status_code == 200 and result.get("success"):
+            if result.get("success"):
                 scans = result.get("scans", [])
 
                 if scans:
                     for scan in scans:
-                        confidence = scan.get("confidence", "N/A")
-                        scan_date = scan.get("scan_date", "N/A")
+                        disease_name = scan.get(
+                            "disease_name",
+                            "Unknown Disease"
+                        )
+
+                        confidence = scan.get(
+                            "confidence",
+                            scan.get("confidence_score", "N/A")
+                        )
+
+                        scan_date = scan.get(
+                            "scan_date",
+                            scan.get("created_at", "N/A")
+                        )
 
                         st.markdown(f"""
                         <div class="result-box">
-                            <h3>🌿 {scan.get('disease_name', 'Unknown Disease')}</h3>
+                            <h3>🌿 {disease_name}</h3>
                             <p><strong>Confidence:</strong> {confidence}%</p>
                             <p><strong>Date:</strong> {scan_date}</p>
                         </div>
@@ -628,7 +643,6 @@ elif st.session_state.page == "History":
 
         except Exception as e:
             st.error(f"❌ Could not fetch scan history: {e}")
-
 # ==================== ABOUT PAGE ====================
 elif st.session_state.page == "About":
     st.markdown("""
