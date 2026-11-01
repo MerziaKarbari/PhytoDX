@@ -16,11 +16,12 @@ class Database:
         """Connect to MySQL"""
         try:
             self.connection = mysql.connector.connect(
-                host=self.config.MYSQL_HOST,
-                user=self.config.MYSQL_USER,
-                password=self.config.MYSQL_PASSWORD,
-                database=self.config.MYSQL_DATABASE
-            )
+    host=self.config.MYSQL_HOST,
+    user=self.config.MYSQL_USER,
+    password=self.config.MYSQL_PASSWORD,
+    database=self.config.MYSQL_DATABASE,
+    ssl_disabled=False
+)
             print("✅ Database connected!")
             return True
         except Exception as e:
