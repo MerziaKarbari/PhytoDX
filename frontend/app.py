@@ -696,6 +696,92 @@ if result.get("success"):
 
 else:
     st.error(f"❌ {result.get('message', 'Registration failed')}")
+    # ==================== REGISTER PAGE ====================
+elif st.session_state.page == "Register":
+    st.markdown("""
+    <div class="page-card" style="max-width: 500px; margin: 0 auto;">
+        <h2>📝 Register</h2>
+        <p>Create your account to get started.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        with st.form("register_form"):
+            name = st.text_input(
+                "Full Name",
+                placeholder="Your name"
+            )
+            email = st.text_input(
+                "Email",
+                placeholder="your@email.com"
+            )
+            phone = st.text_input(
+                "Phone (optional)",
+                placeholder="Phone number"
+            )
+            password = st.text_input(
+                "Password",
+                type="password",
+                placeholder="Create password"
+            )
+            confirm = st.text_input(
+                "Confirm Password",
+                type="password",
+                placeholder="Confirm password"
+            )
+
+            submit = st.form_submit_button(
+                "Register",
+                use_container_width=True
+            )
+
+        if submit:
+            if name and email and password and confirm:
+                if password != confirm:
+                    st.warning("⚠️ Passwords do not match")
+                else:
+                    try:
+                        response = requests.post(
+                            f"{API_URL}/api/register",
+                            json={
+                                "name": name,
+                                "email": email,
+                                "password": password,
+                                "phone": phone
+                            },
+                            timeout=30
+                        )
+
+                        result = response.json()
+
+                        if result.get("success"):
+                            # Automatically log in the new user
+                            st.session_state.logged_in = True
+                            st.session_state.user = {
+                                "user_id": result.get("user_id"),
+                                "name": name,
+                                "email": email,
+                                "phone": phone
+                            }
+
+                            st.success(
+                                "✅ Registration successful! You are now logged in."
+                            )
+                            st.session_state.page = "Home"
+                            st.rerun()
+
+                        else:
+                            st.error(
+                                f"❌ {result.get('message', 'Registration failed')}"
+                            )
+
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
+
+            else:
+                st.warning("⚠️ Please fill all required fields")
 # ==================== LOGIN PAGE ====================
 elif st.session_state.page == "Login":
     st.markdown("""
