@@ -389,6 +389,7 @@ if st.session_state.page == "Home":
     """, unsafe_allow_html=True)
 
 # ==================== SCAN PAGE ====================
+# ==================== SCAN PAGE ====================
 elif st.session_state.page == "Scan":
     st.markdown("""
     <div class="page-card">
@@ -396,145 +397,179 @@ elif st.session_state.page == "Scan":
         <p>Upload or capture a photo of a plant leaf to detect diseases.</p>
     </div>
     """, unsafe_allow_html=True)
-    
+
     option = st.radio(
         "Choose input method:",
         ["📁 Upload Image", "📸 Capture from Camera"],
         horizontal=True
     )
-    
+
     image = None
     uploaded_file = None
-    
+
     if option == "📁 Upload Image":
         uploaded_file = st.file_uploader(
             "Choose a leaf image...",
             type=["jpg", "jpeg", "png"]
         )
+
         if uploaded_file is not None:
             image = Image.open(uploaded_file)
-    
-    else:  # Capture from Camera
+
+    else:
         camera_image = st.camera_input("📸 Capture a leaf image")
+
         if camera_image is not None:
             uploaded_file = camera_image
             image = Image.open(camera_image)
-    
+
     # ---------- PROCESS IMAGE ----------
     if image is not None:
         st.image(image, caption="Uploaded Leaf", width=400)
-        
+
         if st.button("🔍 Analyze", use_container_width=True):
+
             with st.spinner("🧠 AI is analyzing the image..."):
                 try:
+                    # ---------- SEND IMAGE TO BACKEND ----------
                     if uploaded_file is not None:
-                        files = {"image": uploaded_file.getvalue()}
+
+                        files = {
+                            "image": (
+                                uploaded_file.name
+                                if hasattr(uploaded_file, "name")
+                                else "image.jpg",
+                                uploaded_file.getvalue(),
+                            )
+                        }
+
                         predict_response = requests.post(
                             f"{API_URL}/api/predict",
                             files=files,
                             timeout=60
                         )
+
                         predict_result = predict_response.json()
-                        
+
                         if predict_result.get("success"):
                             predicted_class = predict_result.get("disease")
                             confidence = predict_result.get("confidence", 0)
                         else:
-                            st.error(f"❌ Prediction failed: {predict_result.get('message', 'Unknown error')}")
+                            st.error(
+                                f"❌ Prediction failed: "
+                                f"{predict_result.get('message', 'Unknown error')}"
+                            )
                             predicted_class = None
                             confidence = 0
+
                     else:
                         st.error("❌ No image provided")
                         predicted_class = None
                         confidence = 0
-                    
+
+                    # ---------- SHOW PREDICTION ----------
                     if predicted_class:
+
                         disease_info = None
+
+                        # Get disease details from backend
                         try:
                             response = requests.get(
                                 f"{API_URL}/api/disease/{predicted_class}",
                                 timeout=30
                             )
+
                             result = response.json()
-                            if result.get('success'):
-                                disease_info = result.get('disease')
-                        except:
-                            pass
-                        
-                        if disease_info:
-                            diseases = disease_info
-                            treatment = disease_info
+
+                            if result.get("success"):
+                                disease_info = result.get("disease")
+
+                        except Exception:
+                            disease_info = None
+
+                        # Show result
+                        if isinstance(disease_info, dict):
+
+                            disease = disease_info
 
                             st.markdown(f"""
                             <div class="result-box">
                                 <h3>🌿 {predicted_class}</h3>
-                                <p><span class="confidence">Confidence: {confidence:.2f}%</span></p>
-                                <p><strong>Symptoms:</strong> {disease.get('symptoms', 'Information not available')}</p>
-                                <p><strong>Cause:</strong> {disease.get('cause', 'Information not available')}</p>
-                                <p><strong>Treatment:</strong> {treatment.get('treatment', 'Information not available')}</p>
-                                <p><strong>Prevention:</strong> {treatment.get('prevention', 'Information not available')}</p>
+                                <p>
+                                    <span class="confidence">
+                                        Confidence: {confidence:.2f}%
+                                    </span>
+                                </p>
+                                <p>
+                                    <strong>Symptoms:</strong>
+                                    {disease.get('symptoms', 'Information not available')}
+                                </p>
+                                <p>
+                                    <strong>Cause:</strong>
+                                    {disease.get('cause', 'Information not available')}
+                                </p>
+                                <p>
+                                    <strong>Treatment:</strong>
+                                    {disease.get('treatment', 'Information not available')}
+                                </p>
+                                <p>
+                                    <strong>Prevention:</strong>
+                                    {disease.get('prevention', 'Information not available')}
+                                </p>
                             </div>
                             """, unsafe_allow_html=True)
+
                         else:
+                            # Prediction works even if detailed information
+                            # is not available in the database
                             st.markdown(f"""
                             <div class="result-box">
                                 <h3>🌿 {predicted_class}</h3>
-                                <p><span class="confidence">Confidence: {confidence:.2f}%</span></p>
+                                <p>
+                                    <span class="confidence">
+                                        Confidence: {confidence:.2f}%
+                                    </span>
+                                </p>
                             </div>
                             """, unsafe_allow_html=True)
-                            st.info("ℹ️ Detailed disease information coming soon!")
-                            st.markdown(f"""
-                            <div class="result-box">
-                                <h3>🌿 {predicted_class}</h3>
-                                <p><span class="confidence">Confidence: {confidence:.2f}%</span></p>
-                                <p><strong>Symptoms:</strong> {disease.get('symptoms', 'Information not available')}</p>
-                                <p><strong>Cause:</strong> {disease.get('cause', 'Information not available')}</p>
-                                <p><strong>Treatment:</strong> {treatment.get('treatment', 'Information not available')}</p>
-                                <p><strong>Prevention:</strong> {treatment.get('prevention', 'Information not available')}</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            st.markdown(f"""
-                            <div class="result-box">
-                                <h3>🌿 {predicted_class}</h3>
-                                <p><span class="confidence">Confidence: {confidence:.2f}%</span></p>
-                                <p><strong>Symptoms:</strong> {disease.get('symptoms', 'Information not available')}</p>
-                                <p><strong>Cause:</strong> {disease.get('cause', 'Information not available')}</p>
-                                <p><strong>Treatment:</strong> {treatment.get('treatment', 'Information not available') if treatment else 'Information not available'}</p>
-                                <p><strong>Prevention:</strong> {treatment.get('prevention', 'Information not available') if treatment else 'Information not available'}</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"""
-                            <div class="result-box">
-                                <h3>🌿 {predicted_class}</h3>
-                                <p><span class="confidence">Confidence: {confidence:.2f}%</span></p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            st.info("ℹ️ Detailed disease information coming soon!")
-                        
+
+                            st.info(
+                                "ℹ️ Detailed disease information is not available yet."
+                            )
+
+                        # ---------- SAVE SCAN HISTORY ----------
                         if st.session_state.logged_in:
+
                             try:
                                 save_response = requests.post(
                                     f"{API_URL}/api/save_scan",
                                     json={
-                                        "user_id": st.session_state.user['user_id'],
+                                        "user_id": st.session_state.user["user_id"],
                                         "disease_name": predicted_class,
                                         "confidence": confidence,
                                         "image_path": "uploaded_image"
                                     },
                                     timeout=30
                                 )
+
                                 if save_response.status_code == 200:
                                     st.success("✅ Scan saved to history!")
+
                             except Exception as e:
-                                st.warning(f"⚠️ Could not save scan: {e}")
+                                st.warning(
+                                    f"⚠️ Could not save scan: {e}"
+                                )
+
                         else:
                             st.info("💡 Login to save scan history!")
-                        
+
+                        # Low confidence warning
                         if confidence < 60:
-                            st.warning("⚠️ Low confidence prediction. Please upload a clearer image.")
-                        
+                            st.warning(
+                                "⚠️ Low confidence prediction. "
+                                "Please upload a clearer image."
+                            )
+
                 except Exception as e:
                     st.error(f"❌ Error during prediction: {e}")
 
