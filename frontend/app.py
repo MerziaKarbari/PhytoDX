@@ -461,10 +461,28 @@ elif st.session_state.page == "Scan":
                         except:
                             pass
                         
-                                                if disease_info:
+                                                                        if disease_info:
                             disease = disease_info if isinstance(disease_info, dict) else {}
-                            treatment = disease_info if isinstance(disease_info, dict) else {}
-                            
+                            treatment = disease
+
+                            st.markdown(f"""
+                            <div class="result-box">
+                                <h3>🌿 {predicted_class}</h3>
+                                <p><span class="confidence">Confidence: {confidence:.2f}%</span></p>
+                                <p><strong>Symptoms:</strong> {disease.get('symptoms', 'Information not available')}</p>
+                                <p><strong>Cause:</strong> {disease.get('cause', 'Information not available')}</p>
+                                <p><strong>Treatment:</strong> {treatment.get('treatment', 'Information not available')}</p>
+                                <p><strong>Prevention:</strong> {treatment.get('prevention', 'Information not available')}</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"""
+                            <div class="result-box">
+                                <h3>🌿 {predicted_class}</h3>
+                                <p><span class="confidence">Confidence: {confidence:.2f}%</span></p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            st.info("ℹ️ Detailed disease information coming soon!")
                             st.markdown(f"""
                             <div class="result-box">
                                 <h3>🌿 {predicted_class}</h3>
