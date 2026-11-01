@@ -539,34 +539,45 @@ elif st.session_state.page == "Scan":
 
                         # ---------- SAVE SCAN HISTORY ----------
                         # ---------- SAVE SCAN HISTORY ----------
-if st.session_state.logged_in:
-    try:
-        save_response = requests.post(
-            f"{API_URL}/api/save_scan",
-            json={
-                "user_id": st.session_state.user["user_id"],
-                "disease_name": predicted_class,
-                "confidence": float(confidence),
-                "image_path": "uploaded_image"
-            },
-            timeout=30
-        )
+                        # ---------- SAVE SCAN HISTORY ----------
+                        if st.session_state.logged_in:
+                            try:
+                                save_response = requests.post(
+                                    f"{API_URL}/api/save_scan",
+                                    json={
+                                        "user_id": st.session_state.user["user_id"],
+                                        "disease_name": predicted_class,
+                                        "confidence": float(confidence),
+                                        "image_path": "uploaded_image"
+                                    },
+                                    timeout=30
+                                )
 
-        save_result = save_response.json()
+                                save_result = save_response.json()
 
-        if save_response.status_code == 200 and save_result.get("success"):
-            st.success("✅ Scan saved to history!")
-        else:
-            st.error(
-                f"❌ Scan could not be saved: "
-                f"{save_result.get('message', 'Unknown error')}"
-            )
+                                if (
+                                    save_response.status_code == 200
+                                    and save_result.get("success")
+                                ):
+                                    st.success("✅ Scan saved to history!")
+                                else:
+                                    st.error(
+                                        f"❌ Scan could not be saved: "
+                                        f"{save_result.get('message', 'Unknown error')}"
+                                    )
 
-    except Exception as e:
-        st.error(f"❌ Could not save scan: {e}")
+                            except Exception as e:
+                                st.error(f"❌ Could not save scan: {e}")
 
-else:
-    st.info("💡 Login to save scan history!")
+                        else:
+                            st.info("💡 Login to save scan history!")
+
+                        # ---------- LOW CONFIDENCE WARNING ----------
+                        if confidence < 60:
+                            st.warning(
+                                "⚠️ Low confidence prediction. "
+                                "Please upload a clearer image."
+                            )
 
                         # Low confidence warning
                         if confidence < 60:
