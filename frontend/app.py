@@ -579,6 +579,7 @@ else:
                     st.error(f"❌ Error during prediction: {e}")
 
 # ==================== HISTORY PAGE ====================
+# ==================== HISTORY PAGE ====================
 elif st.session_state.page == "History":
     st.markdown("""
     <div class="page-card">
@@ -586,29 +587,45 @@ elif st.session_state.page == "History":
         <p>View your previous scans and results.</p>
     </div>
     """, unsafe_allow_html=True)
-    
+
     if not st.session_state.logged_in:
         st.warning("🔐 Please login to view your scan history.")
+
     else:
         try:
             response = requests.get(
                 f"{API_URL}/api/get_scans/{st.session_state.user['user_id']}",
                 timeout=30
             )
+
             result = response.json()
-            
-            if result.get("success") and result.get("scans"):
-                scans = result["scans"]
-                for scan in scans:
-                    st.markdown(f"""
-                    <div class="result-box">
-                        <h3>🌿 {scan.get('disease_name', 'Unknown Disease')}</h3>
-                        <p><strong>Confidence:</strong> {scan.get('confidence_score', 'N/A')}%</p>
-                        <p><strong>Date:</strong> {scan.get('scan_date', 'N/A')}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+
+            if response.status_code == 200 and result.get("success"):
+                scans = result.get("scans", [])
+
+                if scans:
+                    for scan in scans:
+                        confidence = scan.get("confidence", "N/A")
+                        scan_date = scan.get("scan_date", "N/A")
+
+                        st.markdown(f"""
+                        <div class="result-box">
+                            <h3>🌿 {scan.get('disease_name', 'Unknown Disease')}</h3>
+                            <p><strong>Confidence:</strong> {confidence}%</p>
+                            <p><strong>Date:</strong> {scan_date}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info(
+                        "📭 No scan history yet. Start your first scan from the Scan page!"
+                    )
+
             else:
-                st.info("📭 No scan history yet. Start your first scan from the Scan page!")
+                st.error(
+                    f"❌ Could not load history: "
+                    f"{result.get('message', 'Unknown error')}"
+                )
+
         except Exception as e:
             st.error(f"❌ Could not fetch scan history: {e}")
 
