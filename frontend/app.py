@@ -461,9 +461,9 @@ elif st.session_state.page == "Scan":
                         except:
                             pass
                         
-                                                                        if disease_info:
-                            disease = disease_info if isinstance(disease_info, dict) else {}
-                            treatment = disease
+                     if disease_info:
+                        diseases = disease_info
+                        treatment - disease_info
 
                             st.markdown(f"""
                             <div class="result-box">
