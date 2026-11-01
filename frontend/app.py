@@ -698,7 +698,7 @@ else:
     st.error(f"❌ {result.get('message', 'Registration failed')}")
     # ==================== REGISTER PAGE ====================
 # ==================== REGISTER PAGE ====================
-elif st.session_state.page == "Register":
+if st.session_state.page == "Register":
     st.markdown("""
     <div class="page-card" style="max-width: 500px; margin: 0 auto;">
         <h2>📝 Register</h2>
