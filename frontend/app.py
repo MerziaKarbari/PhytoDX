@@ -708,10 +708,18 @@ elif st.session_state.page == "Login":
                         )
                         result = response.json()
                         if result.get("success"):
-                            st.success(f"✅ Welcome {result['user']['name']}!")
-                            st.session_state.logged_in = True
-                            st.session_state.user = result['user']
-                            st.rerun()
+    # Automatically log in the newly registered user
+    st.session_state.logged_in = True
+    st.session_state.user = {
+        "user_id": result.get("user_id"),
+        "name": name,
+        "email": email,
+        "phone": phone
+    }
+
+    st.success("✅ Registration successful! You are now logged in.")
+    st.session_state.page = "Home"
+    st.rerun()
                         else:
                             st.error(f"❌ {result.get('message', 'Login failed')}")
                     except Exception as e:
