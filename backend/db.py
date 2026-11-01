@@ -170,7 +170,7 @@ class Database:
         finally:
             cursor.close()
 
-    def save_scan(self, user_id, disease_id, image_path, confidence):
+    def save_scan(self, user_id, disease_id, image_path, confidence_score):
         """Save a scan in scan history"""
         cursor = self.connection.cursor()
         try:
