@@ -170,25 +170,27 @@ class Database:
         finally:
             cursor.close()
 
-    def save_scan(self, user_id, disease_id, image_path, confidence_score):
-        """Save a scan in scan history"""
-        cursor = self.connection.cursor()
-        try:
-            cursor.execute(
-                """
-                INSERT INTO SCAN_HISTORY
-                (user_id, disease_id, image_path, confidence_score)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (user_id, disease_id, image_path, confidence_score)
-            )
-            self.connection.commit()
+    def save_scan(self, user_id, disease_id, image_path, confidence):
+    """Save a scan in scan history"""
+    cursor = self.connection.cursor()
 
-            return {
-                "success": True,
-                "message": "Scan saved successfully",
-                "scan_id": cursor.lastrowid
-            }
+    try:
+        cursor.execute(
+            """
+            INSERT INTO SCAN_HISTORY
+            (user_id, disease_id, image_path, confidence_score)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (user_id, disease_id, image_path, confidence)
+        )
+
+        self.connection.commit()
+
+        return {
+            "success": True,
+            "message": "Scan saved successfully",
+            "scan_id": cursor.lastrowid
+        } 
 
         except Error as e:
             self.connection.rollback()
